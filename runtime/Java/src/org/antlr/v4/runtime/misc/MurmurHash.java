@@ -6,6 +6,10 @@
 
 package org.antlr.v4.runtime.misc;
 
+//import java.io.FileOutputStream;
+//import org.antlr.v4.runtime.instrument.MurmurHashMessage;
+//import org.capnproto.MessageBuilder;
+
 /**
  *
  * @author Sam Harwell
@@ -48,6 +52,13 @@ public final class MurmurHash {
 		final int m = 5;
 		final int n = 0xE6546B64;
 
+		// MessageBuilder message = new MessageBuilder();
+		// MurmurHashMessage.MurmurHashMethods.Builder methods = message.initRoot(MurmurHashMessage.MurmurHashMethods.factory);
+		// MurmurHashMessage.MethodUpdateInt.Builder updateInt = methods.initUpdateInt();
+		// MurmurHashMessage.MethodUpdateInt.Input.Builder input = updateInt.initInput();
+		// input.setHash(hash);
+		// input.setValue(value);
+
 		int k = value;
 		k = k * c1;
 		k = (k << r1) | (k >>> (32 - r1));
@@ -57,6 +68,18 @@ public final class MurmurHash {
 		hash = (hash << r2) | (hash >>> (32 - r2));
 		hash = hash * m + n;
 
+		// updateInt.setOutput(hash);
+
+		// try
+		// {
+		// 	java.io.FileOutputStream output = new java.io.FileOutputStream("/home/brian/test.dat", true);
+		// 	org.capnproto.SerializePacked.writeToUnbuffered(output.getChannel(), message);
+		// 	output.close();
+		// }
+		// catch (java.io.IOException e)
+		// {
+		// }
+		
 		return hash;
 	}
 
@@ -80,12 +103,32 @@ public final class MurmurHash {
 	 * @return the final hash result
 	 */
 	public static int finish(int hash, int numberOfWords) {
+		// MessageBuilder message = new MessageBuilder();
+		// MurmurHashMessage.MurmurHashMethods.Builder methods = message.initRoot(MurmurHashMessage.MurmurHashMethods.factory);
+		// MurmurHashMessage.MethodFinish.Builder finish = methods.initFinish();
+		// MurmurHashMessage.MethodFinish.Input.Builder input = finish.initInput();
+		// input.setHash(hash);
+		// input.setNumberOfWords(numberOfWords);
+
 		hash = hash ^ (numberOfWords * 4);
 		hash = hash ^ (hash >>> 16);
 		hash = hash * 0x85EBCA6B;
 		hash = hash ^ (hash >>> 13);
 		hash = hash * 0xC2B2AE35;
 		hash = hash ^ (hash >>> 16);
+
+		//finish.setOutput(hash);
+
+		// try
+		// {
+		// 	java.io.FileOutputStream output = new java.io.FileOutputStream("/home/brian/test.dat", true);
+		// 	org.capnproto.SerializePacked.writeToUnbuffered(output.getChannel(), message);
+		// 	output.close();
+		// }
+		// catch (java.io.IOException e)
+		// {
+		// }
+
 		return hash;
 	}
 

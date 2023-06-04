@@ -5,6 +5,11 @@
  */
 package org.antlr.v4.runtime.misc;
 
+import java.io.FileOutputStream;
+import org.antlr.v4.runtime.instrument.IntervalMessage;
+import org.antlr.v4.runtime.instrument.Instrument;
+import org.capnproto.MessageBuilder;
+
 /** An immutable inclusive interval a..b */
 public class Interval {
 	public static final int INTERVAL_POOL_MAX_VALUE = 1000;
@@ -32,6 +37,7 @@ public class Interval {
 		if ( cache[a]==null ) {
 			cache[a] = new Interval(a,a);
 		}
+
 		return cache[a];
 	}
 
@@ -39,8 +45,25 @@ public class Interval {
 	 *  if b &lt; a, then length is 0.  9..10 has length 2.
 	 */
 	public int length() {
-		if ( b<a ) return 0;
-		return b-a+1;
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initLength();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+
+		if ( b<a )
+		{ 
+			method.setOutput(0);
+			Instrument.writeMessage(message);
+			return 0;
+		}
+
+		var length = b-a+1;
+		method.setOutput(length);
+		Instrument.writeMessage(message);
+
+		return length;
 	}
 
 	@Override
@@ -54,57 +77,153 @@ public class Interval {
 
 	@Override
 	public int hashCode() {
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initHashCode();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+
 		int hash = 23;
 		hash = hash * 31 + a;
 		hash = hash * 31 + b;
+
+		method.setOutput(hash);
+		Instrument.writeMessage(message);
+
 		return hash;
 	}
 
 	/** Does this start completely before other? Disjoint */
 	public boolean startsBeforeDisjoint(Interval other) {
-		return this.a<other.a && this.b<other.a;
+		var retVal = this.a<other.a && this.b<other.a;
+		return retVal;
 	}
 
 	/** Does this start at or before other? Nondisjoint */
 	public boolean startsBeforeNonDisjoint(Interval other) {
-		return this.a<=other.a && this.b>=other.a;
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initStartsBeforeNonDisjoint();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+		var input = method.initInput();
+		input.setA(other.a);
+		input.setB(other.b);
+
+		var retVal = this.a<=other.a && this.b>=other.a;
+
+		method.setOutput(retVal);
+		Instrument.writeMessage(message);
+
+		return retVal;
 	}
 
 	/** Does this.a start after other.b? May or may not be disjoint */
-	public boolean startsAfter(Interval other) { return this.a>other.a; }
+	public boolean startsAfter(Interval other) 
+	{ 
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initStartsAfter();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+		var input = method.initInput();
+		input.setA(other.a);
+		input.setB(other.b);
+
+		var retVal = this.a>other.a;
+
+		method.setOutput(retVal);
+		Instrument.writeMessage(message);
+
+		return retVal; 
+	}
 
 	/** Does this start completely after other? Disjoint */
 	public boolean startsAfterDisjoint(Interval other) {
-		return this.a>other.b;
+		var retVal = this.a>other.b;
+		return retVal;
 	}
 
 	/** Does this start after other? NonDisjoint */
 	public boolean startsAfterNonDisjoint(Interval other) {
-		return this.a>other.a && this.a<=other.b; // this.b>=other.b implied
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initStartsAfterNonDisjoint();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+		var input = method.initInput();
+		input.setA(other.a);
+		input.setB(other.b);
+
+		var retVal = this.a>other.a && this.a<=other.b; // this.b>=other.b implied
+
+		method.setOutput(retVal);
+		Instrument.writeMessage(message);
+
+		return retVal;
 	}
 
 	/** Are both ranges disjoint? I.e., no overlap? */
 	public boolean disjoint(Interval other) {
-		return startsBeforeDisjoint(other) || startsAfterDisjoint(other);
+		var retVal = startsBeforeDisjoint(other) || startsAfterDisjoint(other);
+		return retVal;
 	}
 
 	/** Are two intervals adjacent such as 0..41 and 42..42? */
 	public boolean adjacent(Interval other) {
-		return this.a == other.b+1 || this.b == other.a-1;
+		var retVal = this.a == other.b+1 || this.b == other.a-1;
+		return retVal;
 	}
 
 	public boolean properlyContains(Interval other) {
-		return other.a >= this.a && other.b <= this.b;
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initProperlyContains();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+		var input = method.initInput();
+		input.setA(other.a);
+		input.setB(other.b);
+
+		var retVal = other.a >= this.a && other.b <= this.b;
+
+		method.setOutput(retVal);
+		Instrument.writeMessage(message);
+
+		return retVal;
 	}
 
 	/** Return the interval computed from combining this and other */
 	public Interval union(Interval other) {
-		return Interval.of(Math.min(a, other.a), Math.max(b, other.b));
+		var retVal = Interval.of(Math.min(a, other.a), Math.max(b, other.b));
+		return retVal;
 	}
 
 	/** Return the interval in common between this and o */
 	public Interval intersection(Interval other) {
-		return Interval.of(Math.max(a, other.a), Math.min(b, other.b));
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initIntersection();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+		var input = method.initInput();
+		input.setA(other.a);
+		input.setB(other.b);
+		var output = method.initOutput();
+
+		var retVal = Interval.of(Math.max(a, other.a), Math.min(b, other.b));
+
+		output.setA(retVal.a);
+		output.setB(retVal.b);
+		Instrument.writeMessage(message);
+
+		return retVal;
 	}
 
 	/** Return the interval with elements from this not in other;
@@ -124,11 +243,39 @@ public class Interval {
 		else if ( other.startsAfterNonDisjoint(this) ) {
 			diff = Interval.of(this.a, other.a - 1);
 		}
+
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initDifferenceNotProperlyContained();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+		var input = method.initInput();
+		input.setA(other.a);
+		input.setB(other.b);
+		var output = method.initOutput();
+
+		output.setA(diff.a);
+		output.setB(diff.b);
+		Instrument.writeMessage(message);
+
 		return diff;
 	}
 
 	@Override
 	public String toString() {
-		return a+".."+b;
+		var message = new MessageBuilder();
+		var methods = message.initRoot(IntervalMessage.IntervalMethods.factory);
+		var method = methods.initToString();
+		var state = method.initState();
+		state.setA(this.a);
+		state.setB(this.b);
+
+		var retVal = a+".."+b;
+
+		method.setOutput(retVal);
+		Instrument.writeMessage(message);
+
+		return retVal;
 	}
 }
