@@ -35,10 +35,7 @@ class Interval:
         return self.a == o.a and self.b == o.b
 
     def __hash__(self) -> int:
-        hash = 23
-        hash = hash * 31 + self.a
-        hash = hash * 31 + self.b
-        return hash
+        return hash((self.a, self.b))
 
     def startsBeforeDisjoint(self, other: "Interval") -> bool:
         return self.a < other.a and self.b < other.a
@@ -67,7 +64,7 @@ class Interval:
     def union(self, other: "Interval") -> "Interval":
         return Interval.of(min(self.a, other.a), max(self.b, other.b))
 
-    def intersection(self, other: "Interval"):
+    def intersection(self, other: "Interval") -> "Interval":
         return Interval.of(max(self.a, other.a), min(self.b, other.b))
 
     def differenceNotProperlyContained(self, other: "Interval") -> "Optional[Interval]":

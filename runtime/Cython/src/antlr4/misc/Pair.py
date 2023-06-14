@@ -1,5 +1,4 @@
-from typing import TypeVar, Generic
-from . import MurmurHash
+from typing import TypeVar, Generic, cast
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -18,16 +17,15 @@ class Pair(Generic[A, B]):
         elif not isinstance(obj, Pair):
             return False
 
-        elif type(obj.a) != type(self.a) or type(obj.b) != type(self.b):
+        objPair = cast(Pair[A, B], obj)
+
+        if type(objPair.a) != type(self.a) or type(objPair.b) != type(self.b):
             return False
 
-        return self.a == obj.a and self.b == obj.b
+        return self.a == objPair.a and self.b == objPair.b
 
     def __hash__(self) -> int:
-        hash_val = MurmurHash.initialize()
-        hash_val = MurmurHash.update(hash_val, self.a)
-        hash_val = MurmurHash.update(hash_val, self.b)
-        return MurmurHash.finish(hash_val, 2)
+        return hash((self.a, self.b))
 
     def __str__(self):
         return f"({self.a}, {self.b})"
